@@ -1,0 +1,50 @@
+# NOTE: this is only setup to work with Ubuntu for now
+
+- name: install dependencies for Ubuntu
+  apt: name={{ item }} state=latest
+  with_items:
+    - g++
+    - libboost-iostreams-dev
+
+- name: install dependencies for previous to Ubuntu 16
+  apt: name=zlib-bin state=latest
+  when: ansible_distribution_major_version|int < 16
+
+- name: install dependencies for Ubuntu 16 and above
+  apt: name=zlib1g state=latest
+  when: ansible_distribution_major_version|int >= 16
+
+- name: download Augustus
+  get_url:  dest=/tmp/ url=http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.2.tar.gz
+#  get_url:  dest=/tmp/ url=http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.0.3.tar.gz
+#  get_url:  dest=/tmp/ url=http://stubber.math-inf.uni-greifswald.de/bioinf/augustus/binaries/augustus-3.0.3.tar.gz
+
+- name: extract Augustus source
+  unarchive: copy=no src=/tmp/augustus-3.2.2.tar.gz dest=/opt/
+
+- name: run make
+  shell: make >/opt/augustus-3.2.2/output.make 2>&1 chdir=/opt/augustus-3.2.2/src
+
+- name: link /opt/augustus to /opt/augustus-3.2.2/
+  file: src=/opt/augustus-3.2.2/ dest=/opt/augustus state=link
+
+#- name: set the fact of the augustus install path
+#  set_fact: augustus_config_path="/opt/augustus/config/"
+
+- name: create the profile for augustus
+  shell: /bin/echo -e "export PATH=\$PATH:/opt/augustus-3.2.2/bin\nexport AUGUSTUS_CONFIG_PATH=/opt/augustus-3.2.2/config/" >/etc/profile.d/augustus.sh
+
+- name: set the mode for /etc/profile.d/augustus.sh
+  file: path=/etc/profile.d/augustus.sh mode=0755
+
+- name: determine if /etc/csh/login.d exists
+  stat: path=/etc/csh/login.d
+  register: augustus_csh_logind
+
+- name: create the profile for augustus for csh-based shells
+  shell: /bin/echo -e "setenv PATH \${PATH}:/opt/augustus-3.2.2/bin\nsetenv AUGUSTUS_CONFIG_PATH /opt/augustus-3.2.2/config/" >/etc/csh/login.d/augustus.csh
+  when: augustus_csh_logind.stat.exists
+
+- name: set the mode for /etc/csh/login.d/augustus.csh
+  file: path=/etc/csh/login.d/augustus.csh mode=0755
+  when: augustus_csh_logind.stat.exists

@@ -1,0 +1,6 @@
+# NOTE: this is only setup to work with Ubuntu for now
+
+- name: install dependencies for Ubuntu
+  apt: name={{ item }} state=latest
+  with_items:
+    - exonerate

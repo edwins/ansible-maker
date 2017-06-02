@@ -1,0 +1,23 @@
+# NOTE: this is only setup to work with Ubuntu for now
+
+- name: install dependencies for Ubuntu
+  apt: name={{ item }} state=latest
+  with_items:
+    - gcc
+    - g++
+    - make
+
+- name: download mpich 3.1.3
+  get_url:  dest=/tmp/ url=http://www.mpich.org/static/downloads/3.1.3/mpich-3.1.3.tar.gz
+
+- name: extract the mpich source
+  unarchive: copy=no src=/tmp/mpich-3.1.3.tar.gz dest=/opt/
+
+- name: run configure
+  shell: /opt/mpich-3.1.3/configure --enable-shared --disable-fortran >/opt/mpich-3.1.3/output.configure 2>&1 CFLAGS="-fPIC" CCFLAGS="-fPIC" CXXFLAGS="-fPIC" chdir=/opt/mpich-3.1.3/
+
+- name: run make
+  shell: make >/opt/mpich-3.1.3/output.make 2>&1 chdir=/opt/mpich-3.1.3/
+
+- name: run make install
+  shell: make install >/opt/mpich-3.1.3/output.make_install 2>&1 chdir=/opt/mpich-3.1.3/

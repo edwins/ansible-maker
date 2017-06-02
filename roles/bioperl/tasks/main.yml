@@ -1,0 +1,18 @@
+# NOTE: this is only setup to work with Ubuntu for now
+# THIS ONLY WORKS WITH 14.04
+
+- name: install dependencies for Ubuntu
+  apt: name={{ item }} state=latest
+  with_items:
+    - cpanminus
+
+- name: cpanminus self upgrade
+  shell: cpanm App::cpanminus
+
+- name: cpanm Module::Build
+  shell: cpanm Module::Build
+
+- name: install bioperl
+  apt: name={{ item }} state=latest
+  with_items:
+    - bioperl

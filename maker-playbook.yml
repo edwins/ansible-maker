@@ -1,0 +1,40 @@
+---
+  hosts: maker-hosts
+  roles:
+
+    - role: mpich-v31
+      tags:
+      - mpi
+
+    - role: augustus-v3
+      tags:
+      - augustus
+
+    - role: ncbi-blast
+      tags:
+      - ncbi-blast
+
+    - role: snap
+      tags:
+      - snap
+
+    - role: exonerate
+      tags:
+      - exonerate
+
+    - role: repeatmasker-v4
+      tags:
+      - repeatmasker
+
+    - role: bioperl
+      tags:
+      - bioperl
+
+    - role: maker
+      tags:
+      - maker
+  vars:
+    MAKER_TARBALL: maker-2.31.8.tgz
+    REPEATMASKER_LIBS:
+      - "repeatmaskerlibraries-20140131.tar.gz"
+    TRF_BIN: trf407b.linux64

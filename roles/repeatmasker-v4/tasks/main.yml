@@ -1,0 +1,61 @@
+# NOTE: this is only setup to work with Ubuntu for now
+
+#- name: install dependencies for Ubuntu
+#  apt: name={{ item }} state=latest
+#  with_items:
+#    - gcc
+#    - g++
+- name: install the various perl module
+  shell: cpanm {{ item }}
+  with_items:
+    - Text::Soundex
+
+- name: download rmblast
+  get_url:  dest=/tmp/ url=ftp://ftp.ncbi.nlm.nih.gov/blast/executables/rmblast/2.2.28/ncbi-rmblastn-2.2.28-x64-linux.tar.gz
+
+- name: extract the rmblast source
+  unarchive: copy=no src=/tmp/ncbi-rmblastn-2.2.28-x64-linux.tar.gz dest=/opt/
+
+- name: link the rmtblasn binary into /usr/bin
+  file: src=/opt/ncbi-rmblastn-2.2.28/bin/rmblastn dest=/usr/bin/rmblastn state=link
+
+- name: download repeatmasker v4
+  get_url:  dest=/tmp/ url=http://www.repeatmasker.org/RepeatMasker-open-4-0-5.tar.gz
+
+- name: extract repeatmasker
+  unarchive: copy=no src=/tmp/RepeatMasker-open-4-0-5.tar.gz dest=/opt/
+
+- name: extract TRF
+  copy: src="{{ TRF_BIN }}" dest="/opt/RepeatMasker/{{ TRF_BIN }}" mode=0755
+
+- name: link the trf binary
+  file: src="/opt/RepeatMasker/{{ TRF_BIN }}" dest=/opt/RepeatMasker/trf state=link
+
+- name: extract the repeatmasker libraries
+  unarchive: src="{{ item }}" dest=/opt/RepeatMasker/
+  with_items:
+    - REPEATMASKER_LIBS
+
+- name: copy over the responses file
+  copy: src=repeatmasker_responses.txt dest=/opt/RepeatMasker/repeatmasker_responses.txt
+
+- name: execute the configure script
+  shell: perl /opt/RepeatMasker/configure -re_exec_perl=/usr/bin/perl <repeatmasker_responses.txt >/opt/RepeatMasker/output.configure 2>&1 chdir=/opt/RepeatMasker
+
+- name: create the profile for repeatmasker
+  shell: /bin/echo -e "export PATH=\$PATH:/opt/RepeatMasker" >/etc/profile.d/repeatmasker.sh
+
+- name: set the mode for /etc/profile.d/repeatmasker.sh
+  file: path=/etc/profile.d/repeatmasker.sh mode=0755
+
+- name: determine if /etc/csh/login.d exists
+  stat: path=/etc/csh/login.d
+  register: repeatmasker_csh_logind
+
+- name: create the profile for repeatmasker for csh-based shells
+  shell: /bin/echo -e "setenv PATH \${PATH}:/opt/RepeatMasker" >/etc/csh/login.d/repeatmasker.csh
+  when: repeatmasker_csh_logind.stat.exists
+
+- name: set the mode for /etc/csh/login.d/repeatmasker.csh
+  file: path=/etc/csh/login.d/repeatmasker.csh mode=0755
+  when: repeatmasker_csh_logind.stat.exists

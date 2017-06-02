@@ -1,0 +1,52 @@
+# NOTE: this is only setup to work with Ubuntu for now
+
+- name: install dependencies for Ubuntu
+  apt: name={{ item }} state=latest
+  with_items:
+    - libdbd-pg-perl
+
+- name: install the various perl module
+  shell: cpanm {{ item }}
+  with_items:
+    - Bit::Vector
+    - DBD::SQLite
+    - IO::All
+    - Inline::C
+    - Perl::Unsafe::Signals
+    - Want
+    - forks
+    - forks::shared
+    - LWP::Simple
+    - DBI
+    - DBD::SQLite
+
+- name: extract maker
+  unarchive: copy=yes src="{{ MAKER_TARBALL }}" dest=/opt/
+
+- name: copy over the responses file
+  copy: src=maker_build_responses.txt dest=/opt/maker/src/maker_build_responses.txt
+
+- name: execute the Build.PL
+  shell: perl Build.PL <maker_build_responses.txt >/opt/maker/src/output.build 2>&1 chdir=/opt/maker/src
+
+- name: execute Build install
+  shell: ./Build install >/opt/maker/src/output.build_install 2>&1 chdir=/opt/maker/src
+
+- name: create the profile for maker
+  shell: /bin/echo -e "export PATH=\$PATH:/opt/maker/bin" >/etc/profile.d/maker.sh
+
+- name: set the mode for /etc/profile.d/maker.sh
+  file: path=/etc/profile.d/maker.sh mode=0755
+
+- name: determine if /etc/csh/login.d exists
+  stat: path=/etc/csh/login.d
+  register: maker_csh_logind
+
+- name: create the profile for maker for csh-based shells
+  shell: /bin/echo -e "setenv PATH \${PATH}:/opt/maker/bin" >/etc/csh/login.d/maker.csh
+  when: maker_csh_logind.stat.exists
+
+- name: set the mode for /etc/csh/login.d/maker.csh
+  file: path=/etc/csh/login.d/maker.csh mode=0755
+  when: maker_csh_logind.stat.exists
+

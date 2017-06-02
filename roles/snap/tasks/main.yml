@@ -1,0 +1,39 @@
+# NOTE: this is only setup to work with Ubuntu for now
+
+#- name: install dependencies for Ubuntu
+#  apt: name={{ item }} state=latest
+#  with_items:
+#    - g++
+#    - zlib-bin
+#    - libboost-iostreams-dev
+
+- name: download snap
+  get_url:  dest=/tmp/ url=http://korflab.ucdavis.edu/Software/snap-2013-11-29.tar.gz
+
+- name: extract snap source
+  unarchive: copy=no src=/tmp/snap-2013-11-29.tar.gz dest=/opt/
+
+- name: run make
+  shell: make >/opt/snap/output.make 2>&1 chdir=/opt/snap/
+
+- name: run make for zoe
+  shell: make >/opt/snap/Zoe/output.make 2>&1 chdir=/opt/snap/Zoe
+
+- name: create the profile for snap
+  shell: /bin/echo -e "export PATH=\$PATH:/opt/snap\nexport ZOE=/opt/snap/Zoe/" >/etc/profile.d/snap.sh
+
+- name: set the mode for /etc/profile.d/snap.sh
+  file: path=/etc/profile.d/snap.sh mode=0755
+
+- name: determine if /etc/csh/login.d exists
+  stat: path=/etc/csh/login.d
+  register: snap_csh_logind
+
+- name: create the profile for snap for csh-based shells
+  shell: /bin/echo -e "setenv PATH \${PATH}:/opt/snap\nsetenv ZOE /opt/snap/Zoe" >/etc/csh/login.d/snap.csh
+  when: snap_csh_logind.stat.exists
+
+- name: set the mode for /etc/csh/login.d/snap.csh
+  file: path=/etc/csh/login.d/snap.csh mode=0755
+  when: snap_csh_logind.stat.exists
+

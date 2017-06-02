@@ -1,0 +1,6 @@
+/opt/RepeatMasker
+/opt/RepeatMasker/trf
+2
+/usr/bin/
+y
+5
