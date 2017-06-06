@@ -1,10 +1,11 @@
 # NOTE: this is only setup to work with Ubuntu for now
 
-#- name: install dependencies for Ubuntu
-#  apt: name={{ item }} state=latest
-#  with_items:
-#    - gcc
-#    - g++
+- name: install dependencies for Ubuntu
+  apt: name={{ item }} state=latest
+  with_items:
+    - cpanminus
+  when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version|int >= 16 
+
 - name: install the various perl module
   shell: cpanm {{ item }}
   with_items:
@@ -34,7 +35,7 @@
 - name: extract the repeatmasker libraries
   unarchive: src="{{ item }}" dest=/opt/RepeatMasker/
   with_items:
-    - REPEATMASKER_LIBS
+    REPEATMASKER_LIBS
 
 - name: copy over the responses file
   copy: src=repeatmasker_responses.txt dest=/opt/RepeatMasker/repeatmasker_responses.txt

@@ -1,7 +1,7 @@
 ---
-  hosts: maker-hosts
+- name: This is the playbook to install and configure maker
+  hosts: vm119
   roles:
-
     - role: mpich-v31
       tags:
       - mpi
