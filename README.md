@@ -1,6 +1,6 @@
 This is an unofficially supported ansible to install and confirm Maker with a set of dependencies. 
 
-CURRENTLY, THIS ANSIBLE HAS ONLY BEEN TESTED WITH 14.04
+CURRENTLY, THIS ANSIBLE HAS ONLY BEEN TESTED WITH Ubuntu
 
 Before you use this ansible, you'll need to setup the following:
 
